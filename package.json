@@ -5,12 +5,16 @@
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.585.0",
     "@aws-sdk/lib-dynamodb": "^3.585.0",
+    "bcryptjs": "^3.0.2",
     "express": "^4.19.2",
     "serverless-http": "^3.2.0"
   },
   "devDependencies": {
-    "@types/node": "^24.4.0",
+    "@types/aws-lambda": "^8.10.152",
+    "@types/bcrypt": "^6.0.0",
+    "@types/node": "^24.5.0",
     "esbuild": "^0.25.9",
+    "serverless-offline": "^14.4.0",
     "typescript": "^5.9.2"
   },
   "main": "handler.js",
