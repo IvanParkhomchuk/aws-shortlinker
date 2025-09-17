@@ -9,6 +9,7 @@ stages:
 provider:
   name: aws
   runtime: nodejs20.x
+  region: eu-central-1
   iam:
     role:
       statements:
@@ -23,7 +24,7 @@ provider:
           Resource:
             - Fn::GetAtt: [UsersTable, Arn]
   environment:
-    USERS_TABLE: ${param:tableName}
+    USERS_TABLE: users-table-dev
 
 functions:
   signup:
