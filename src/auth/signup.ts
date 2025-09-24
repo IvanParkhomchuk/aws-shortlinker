@@ -1,4 +1,4 @@
-import { DynamoDBClient, PutItemCommand, ScanCommand } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, PutItemCommand, QueryCommand } from "@aws-sdk/client-dynamodb";
 import bcrypt from "bcryptjs";
 import * as uuid from 'uuid';
 
@@ -10,15 +10,18 @@ export const handler = async(event: any) => {
         const { username, password } = requestBody;
         const saltRounds = 10;
         
-        const scanParams = {
+        const queryParams = {
             TableName: process.env.USERS_TABLE,
-            ProjectionExpression: "username",
+            IndexName: "UsernameIndex",
+            KeyConditionExpression: "username = :username",
+            ExpressionAttributeValues: {
+                ":username": { S: username },
+            },
         };
 
-        const data = await client.send(new ScanCommand(scanParams));
-        const existingUsername = data.Items?.map(item => item.username?.S);
+        const result = await client.send(new QueryCommand(queryParams));
 
-        if (existingUsername?.includes(username)) {
+        if (result.Count && result.Count > 0) {
             return {
                 statusCode: 400,
                 body: JSON.stringify({ error: "Username already exists" }),

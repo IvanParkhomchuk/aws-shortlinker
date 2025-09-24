@@ -25,14 +25,34 @@ provider:
             - Fn::GetAtt: [UsersTable, Arn]
   environment:
     USERS_TABLE: users-table-dev
+    ACCESS_TOKEN_SECRET: 4e5577b05140cda2a5ed5da4db3236c3ecd00a6605956ea9ff4e382532a40551b91655368eeeec04ee536e6584dbd6e624105bca778f5d646fb951c44665453f
+    REFRESH_TOKEN_SECRET: b9628691487e0c180b03cc72704bc8c1e6c7b359f8f3320b247c6fd0407d3d3e403833cba36065f4a01acd63d3b869ba4741324bc2823caa2d973eb93f0245ce
 
 functions:
+  middleware:
+    handler: src/auth/middleware.handler
   signup:
     handler: src/auth/signup.handler
     events:
       - http:
-          path: auth
+          path: signup
           method: post
+  login:
+    handler: src/auth/login.handler
+    events:
+      - http:
+          path: login
+          method: post
+  test:
+    handler: src/auth/test.handler
+    events:
+      - http:
+          path: test
+          method: get
+          authorizer:
+            name: middleware
+            type: TOKEN
+            identitySource: method.request.header.Authorization
 
 resources:
   Resources:
@@ -42,9 +62,18 @@ resources:
         AttributeDefinitions:
           - AttributeName: userId
             AttributeType: S
+          - AttributeName: username
+            AttributeType: S
         KeySchema:
           - AttributeName: userId
             KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: UsernameIndex
+            KeySchema:
+              - AttributeName: username
+                KeyType: HASH
+            Projection:
+            ProjectionType: ALL
         BillingMode: PAY_PER_REQUEST
         TableName: ${param:tableName}
 
