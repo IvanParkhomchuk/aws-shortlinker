@@ -1,36 +1,39 @@
-import { DynamoDBClient, PutItemCommand, QueryCommand } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import bcrypt from "bcryptjs";
 import * as uuid from 'uuid';
 
+const validator = require("validator");
 const client = new DynamoDBClient();
+const ddbDocClient = DynamoDBDocumentClient.from(client);
 
 export const handler = async(event: any) => {
     try {
         const requestBody = JSON.parse(event.body);
-        const { username, password } = requestBody;
+        const { email, password } = requestBody;
         const saltRounds = 10;
         
         const queryParams = {
             TableName: process.env.USERS_TABLE,
-            IndexName: "UsernameIndex",
-            KeyConditionExpression: "username = :username",
+            IndexName: "EmailIndex",
+            KeyConditionExpression: "email = :email",
             ExpressionAttributeValues: {
-                ":username": { S: username },
+                ":email": email,
             },
         };
 
-        const result = await client.send(new QueryCommand(queryParams));
+        const result = await ddbDocClient.send(new QueryCommand(queryParams));
 
         if (result.Count && result.Count > 0) {
             return {
                 statusCode: 400,
-                body: JSON.stringify({ error: "Username already exists" }),
+                body: JSON.stringify({ error: "Email already exists" }),
             }
         }
-        if (!username || typeof username !== "string") {
+        if (!validator.isEmail(email)) {
             return {
                 statusCode: 400,
-                body: JSON.stringify({ error: "Username is required and must be a string" }),
+                body: JSON.stringify({ error: "Email is required and must be a string" }),
             };
         }
         if (!password || typeof password !== "string") {
@@ -44,17 +47,17 @@ export const handler = async(event: any) => {
         const putParams = {
             TableName: process.env.USERS_TABLE,
             Item: {
-                userId: { S: uuid.v4() },
-                username: { S: username },
-                password: { S: hashedPassword }
+                userId: uuid.v4(),
+                email: email,
+                password: hashedPassword
             }
         };
 
-        await client.send(new PutItemCommand(putParams));
+        await client.send(new PutCommand(putParams));
 
         return {
             statusCode: 200,
-            body: JSON.stringify({ message: "Signup received successfuly", username }),
+            body: JSON.stringify({ message: "Signup received successfuly", email }),
         };
     } catch (err) {
         console.error("Signup error:", err);

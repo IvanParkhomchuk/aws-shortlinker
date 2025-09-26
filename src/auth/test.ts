@@ -1,3 +1,6 @@
 export const handler = async (event: any) => {
-    console.log(222);
+    return {
+        statusCode: 200,
+        body: JSON.stringify({ message: "Success" })
+    }
 };

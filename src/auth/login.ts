@@ -9,14 +9,14 @@ const ddbDocClient = DynamoDBDocumentClient.from(client);
 export const handler = async(event: any) => {
     try {
         const requestBody = JSON.parse(event.body);
-        const { username, password } = requestBody;
+        const { email, password } = requestBody;
 
         const queryParams = {
             TableName: process.env.USERS_TABLE,
-            IndexName: "UsernameIndex",
-            KeyConditionExpression: "username = :username",
+            IndexName: "EmailIndex",
+            KeyConditionExpression: "email = :email",
             ExpressionAttributeValues: {
-                ":username": username,
+                ":email": email,
             },
         };
 
@@ -26,7 +26,7 @@ export const handler = async(event: any) => {
         if (!user || !await bcrypt.compare(password, user!.password)) {
             return {
                 statusCode: 400,
-                body: JSON.stringify({ message: 'Invalid username or password' }),
+                body: JSON.stringify({ message: 'Invalid email or password' }),
             }
         }
 
