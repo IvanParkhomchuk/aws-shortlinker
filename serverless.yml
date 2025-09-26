@@ -44,6 +44,12 @@ functions:
       - http:
           path: login
           method: post
+  refresh:
+    handler: src/auth/refresh.handler
+    events:
+      - http:
+          path: refresh
+          method: post
   test:
     handler: src/auth/test.handler
     events:
