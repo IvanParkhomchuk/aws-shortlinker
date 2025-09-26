@@ -1,5 +1,6 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import * as uuid from 'uuid';
 
@@ -44,10 +45,12 @@ export const handler = async(event: any) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, saltRounds); 
+
+        const userId = uuid.v4()
         const putParams = {
             TableName: process.env.USERS_TABLE,
             Item: {
-                userId: uuid.v4(),
+                userId: userId,
                 email: email,
                 password: hashedPassword
             }
@@ -55,9 +58,12 @@ export const handler = async(event: any) => {
 
         await client.send(new PutCommand(putParams));
 
+        const accessToken = jwt.sign({ userId: userId }, process.env.ACCESS_TOKEN_SECRET as string, { expiresIn: "15m" });
+        const refreshToken = jwt.sign({ userId: userId }, process.env.REFRESH_TOKEN_SECRET as string, { expiresIn: "7d" });
+
         return {
             statusCode: 200,
-            body: JSON.stringify({ message: "Signup received successfuly", email }),
+            body: JSON.stringify({ message: "Signup received successfuly", accessToken, refreshToken }),
         };
     } catch (err) {
         console.error("Signup error:", err);
