@@ -56,7 +56,7 @@ export const handler = async(event: any) => {
             }
         };
 
-        await client.send(new PutCommand(putParams));
+        await ddbDocClient.send(new PutCommand(putParams));
 
         const accessToken = jwt.sign({ userId: userId }, process.env.ACCESS_TOKEN_SECRET as string, { expiresIn: "15m" });
         const refreshToken = jwt.sign({ userId: userId }, process.env.REFRESH_TOKEN_SECRET as string, { expiresIn: "7d" });

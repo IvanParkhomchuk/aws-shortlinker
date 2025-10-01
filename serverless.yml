@@ -4,7 +4,8 @@ service: shortlinker
 stages:
   default:
     params:
-      tableName: "users-table-${sls:stage}"
+      usersTableName: "users-table-${sls:stage}"
+      linksTableName: "links-table-${sls:stage}"
 
 provider:
   name: aws
@@ -23,9 +24,11 @@ provider:
             - dynamodb:DeleteItem
           Resource:
             - Fn::GetAtt: [UsersTable, Arn]
+            - Fn::GetAtt: [LinksTable, Arn]
             - !Sub "${UsersTable.Arn}/index/*"
   environment:
-    USERS_TABLE: users-table-dev
+    USERS_TABLE: ${param:usersTableName}
+    LINKS_TABLE: ${param:linksTableName}
     ACCESS_TOKEN_SECRET: 4e5577b05140cda2a5ed5da4db3236c3ecd00a6605956ea9ff4e382532a40551b91655368eeeec04ee536e6584dbd6e624105bca778f5d646fb951c44665453f
     REFRESH_TOKEN_SECRET: b9628691487e0c180b03cc72704bc8c1e6c7b359f8f3320b247c6fd0407d3d3e403833cba36065f4a01acd63d3b869ba4741324bc2823caa2d973eb93f0245ce
 
@@ -50,12 +53,12 @@ functions:
       - http:
           path: refresh
           method: post
-  test:
-    handler: src/auth/test.handler
+  createLink:
+    handler: src/links/createLink.handler
     events:
       - http:
-          path: test
-          method: get
+          path: createLink
+          method: post
           authorizer:
             name: middleware
             type: TOKEN
@@ -82,7 +85,18 @@ resources:
             Projection:
               ProjectionType: ALL
         BillingMode: PAY_PER_REQUEST
-        TableName: ${param:tableName}
+        TableName: ${param:usersTableName}
+    LinksTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: linkId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: linkId
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${param:linksTableName}
 
 plugins:
   - serverless-offline
