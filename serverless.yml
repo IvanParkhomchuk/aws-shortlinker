@@ -74,6 +74,16 @@ functions:
             name: middleware
             type: TOKEN
             identitySource: method.request.header.Authorization
+  deactivateLink:
+    handler: src/links/deactivateLink.handler
+    events:
+      - http:
+          path: deactivateLink
+          method: post
+          authorizer:
+            name: middleware
+            type: TOKEN
+            identitySource: method.request.header.Authorization
 
 resources:
   Resources:

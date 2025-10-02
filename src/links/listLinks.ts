@@ -22,7 +22,7 @@ export const handler = async(event: any) => {
         };
 
         const result = await ddbDocClient.send(new QueryCommand(queryParams));
-        const userLinks = result.Items![0];
+        const userLinks = result.Items;
 
         return {
             statusCode: 200,
