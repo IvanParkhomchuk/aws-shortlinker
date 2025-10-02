@@ -24,8 +24,9 @@ provider:
             - dynamodb:DeleteItem
           Resource:
             - Fn::GetAtt: [UsersTable, Arn]
-            - Fn::GetAtt: [LinksTable, Arn]
             - !Sub "${UsersTable.Arn}/index/*"
+            - Fn::GetAtt: [LinksTable, Arn]
+            - !Sub "${LinksTable.Arn}/index/UserIdIndex"
   environment:
     USERS_TABLE: ${param:usersTableName}
     LINKS_TABLE: ${param:linksTableName}
@@ -63,6 +64,16 @@ functions:
             name: middleware
             type: TOKEN
             identitySource: method.request.header.Authorization
+  listLinks:
+    handler: src/links/listLinks.handler
+    events:
+      - http:
+          path: listLinks
+          method: get
+          authorizer:
+            name: middleware
+            type: TOKEN
+            identitySource: method.request.header.Authorization
 
 resources:
   Resources:
@@ -92,9 +103,18 @@ resources:
         AttributeDefinitions:
           - AttributeName: linkId
             AttributeType: S
+          - AttributeName: userId
+            AttributeType: S
         KeySchema:
           - AttributeName: linkId
             KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: UserIdIndex
+            KeySchema:
+              - AttributeName: userId
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
         BillingMode: PAY_PER_REQUEST
         TableName: ${param:linksTableName}
 
