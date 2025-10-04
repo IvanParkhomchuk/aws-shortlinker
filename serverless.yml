@@ -84,6 +84,16 @@ functions:
             name: middleware
             type: TOKEN
             identitySource: method.request.header.Authorization
+  redirect:
+    handler: src/links/redirect.handler
+    events:
+      - http:
+          path: "{shortenedUrl}"
+          method: get
+          authorizer:
+            name: middleware
+            type: TOKEN
+            identitySource: method.request.header.Authorization
 
 resources:
   Resources:
@@ -115,6 +125,8 @@ resources:
             AttributeType: S
           - AttributeName: userId
             AttributeType: S
+          - AttributeName: shortenedUrl
+            AttributeType: S
         KeySchema:
           - AttributeName: linkId
             KeyType: HASH
@@ -122,6 +134,12 @@ resources:
           - IndexName: UserIdIndex
             KeySchema:
               - AttributeName: userId
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+          - IndexName: ShortenedUrlIndex
+            KeySchema:
+              - AttributeName: shortenedUrl
                 KeyType: HASH
             Projection:
               ProjectionType: ALL
